@@ -2,6 +2,7 @@ package com.cgvsu;
 
 import com.cgvsu.model.Model;
 import com.cgvsu.objreader.ObjReader;
+import com.cgvsu.objwriter.ObjWriter;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
 import javafx.animation.Animation;
@@ -48,11 +49,6 @@ public class GuiControllerTest {
     private TextField text;
 
     @FXML
-    void save(MouseEvent event) {
-
-    }
-
-    @FXML
     AnchorPane anchorPane;
 
     @FXML
@@ -89,28 +85,6 @@ public class GuiControllerTest {
 
         timeline.getKeyFrames().add(frame);
         timeline.play();
-    }
-
-    @FXML
-    void open(MouseEvent event) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
-        fileChooser.setTitle("Load Model");
-
-        File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
-        if (file == null) {
-            return;
-        }
-
-        Path fileName = Path.of(file.getAbsolutePath());
-
-        try {
-            String fileContent = Files.readString(fileName);
-            mesh = ObjReader.read(fileContent);
-            // todo: обработка ошибок
-        } catch (IOException exception) {
-
-        }
     }
 
     public void handleCameraForward() {
@@ -163,7 +137,38 @@ public class GuiControllerTest {
         }
     }
 
-    public void moveMouce(MouseEvent mouseEvent) {
-        //System.out.println("123");
+    @FXML
+    void open(MouseEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
+        fileChooser.setTitle("Load Model");
+
+        File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+
+        Path fileName = Path.of(file.getAbsolutePath());
+
+        try {
+            String fileContent = Files.readString(fileName);
+            mesh = ObjReader.read(fileContent);
+            // todo: обработка ошибок
+        } catch (IOException exception) {
+
+        }
+    }
+
+    @FXML
+    void save(MouseEvent event) {
+        if (mesh != null) {
+            if (!Objects.equals(text.getText(), "") && !Objects.equals(text.getText(), "Введите имя сохраняемого файла")) {
+                ObjWriter.write(mesh, text.getText()+".obj");
+                text.setText("Успешно!");
+            }
+            else {
+                text.setText("Введите имя сохраняемого файла");
+            }
+        }
     }
 }
