@@ -1,29 +1,59 @@
 package com.cgvsu;
 
+import com.cgvsu.model.Model;
+import com.cgvsu.objreader.ObjReader;
+import com.cgvsu.objwriter.ObjWriter;
+import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
-import javafx.fxml.FXML;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import javax.vecmath.Vector3f;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.IOException;
-import java.io.File;
-import javax.vecmath.Vector3f;
-
-import com.cgvsu.model.Model;
-import com.cgvsu.objreader.ObjReader;
-import com.cgvsu.render_engine.Camera;
+import java.util.IllegalFormatCodePointException;
+import java.util.Objects;
 
 public class GuiController {
 
-    final private float TRANSLATION = 0.5F; //шаг перемещения камеры
+    final private float TRANSLATION = 0.9F; //шаг перемещения камеры
+
+    @FXML
+    public AnchorPane modelPane;
+    @FXML
+    public AnchorPane gadgetPane;
+    @FXML
+    public Text wrongSaveText;
+    @FXML
+    public Text successSaveText;
+    @FXML
+    public Text fileAlreadyExist;
+
+    @FXML
+    private Button open;
+
+    @FXML
+    private Button save;
+
+    @FXML
+    private TextField text;
 
     @FXML
     AnchorPane anchorPane;
@@ -64,8 +94,32 @@ public class GuiController {
         timeline.play();
     }
 
+    public void moveModel(KeyEvent keyEvent) {
+        if (Objects.equals(keyEvent.getText(), "w")) {
+            camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
+        }
+        if (Objects.equals(keyEvent.getText(), "s")) {
+            camera.movePosition(new Vector3f(0, 0, TRANSLATION));
+        }
+        if (Objects.equals(keyEvent.getText(), "a")) {
+            camera.movePosition(new Vector3f(TRANSLATION, 0, 0));
+        }
+        if (Objects.equals(keyEvent.getText(), "d")) {
+            camera.movePosition(new Vector3f(-TRANSLATION, 0, 0));
+        }
+        if (Objects.equals(keyEvent.getText(), "r")) {
+            camera.movePosition(new Vector3f(0, TRANSLATION, 0));
+        }
+        if (Objects.equals(keyEvent.getText(), "f")) {
+            camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
+        }
+    }
+
     @FXML
-    private void onOpenModelMenuItemClick() {
+    void open(MouseEvent event) {
+        successSaveText.setVisible(false);
+        wrongSaveText.setVisible(false);
+        fileAlreadyExist.setVisible(false);
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
         fileChooser.setTitle("Load Model");
@@ -87,32 +141,25 @@ public class GuiController {
     }
 
     @FXML
-    public void handleCameraForward(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
-    }
-
-    @FXML
-    public void handleCameraBackward(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, 0, TRANSLATION));
-    }
-
-    @FXML
-    public void handleCameraLeft(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(TRANSLATION, 0, 0));
-    }
-
-    @FXML
-    public void handleCameraRight(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(-TRANSLATION, 0, 0));
-    }
-
-    @FXML
-    public void handleCameraUp(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, TRANSLATION, 0));
-    }
-
-    @FXML
-    public void handleCameraDown(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
+    void save(MouseEvent event) {
+        if (mesh != null) {
+            if (!text.getText().equals("") && text.getText().substring(text.getText().length() - 4).equals(".obj")) {
+                File f = new File(text.getText());
+                if (f.exists()) {
+                    fileAlreadyExist.setVisible(true);
+                    successSaveText.setVisible(false);
+                    wrongSaveText.setVisible(false);
+                } else {
+                    ObjWriter.write(mesh, text.getText());
+                    successSaveText.setVisible(true);
+                    wrongSaveText.setVisible(false);
+                    fileAlreadyExist.setVisible(false);
+                }
+            } else {
+                successSaveText.setVisible(false);
+                wrongSaveText.setVisible(true);
+                fileAlreadyExist.setVisible(false);
+            }
+        }
     }
 }
